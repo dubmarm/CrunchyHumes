@@ -3,9 +3,9 @@
 # this music scrapper is an abomination, I know this, but I'm learning
 # so deal with it.
 
-# what it's supposed to do, is get a list of directories in a music folders
+# what it's supposed to do, is get a list of directories in a root music folder
 # the folders are expected to be titled after artists
-# the script this dumps the list of folders/artists into a list
+# the script then dumps the list of folders/artists into a list
 # an iteration is performed on the artist list and urllib queries musicbrainz
 # if an artist match is made with musicbrainz, then another iteration is performed
 # where the 'tags' are pulled from the artist's musicbrainz profile page
@@ -79,8 +79,7 @@ def tickles(fscore, fartist, ffolder, ftags):
             f.write("Score: ") #("Score: ").encode('utf-8'))
             f.write(fscore)
             f.write("Artist: ")#("Artist: ").encode('utf-8'))
-            f.write(fartist)
-            #f.write(("Original Artist: ").encode('utf-8'))
+            f.write(fartist) #haha, fart
             f.write("Folder Path: ")#.encode('utf-8')
             f.write('"' + rpath + ffolder + '"')
             #f.write(ffolder)
