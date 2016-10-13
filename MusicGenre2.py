@@ -44,6 +44,7 @@ def scanroot(path):
 try:
     import urllib.request
     from bs4 import BeautifulSoup
+    import re
 except ImportError: # i really need to practice exception handling
     print('Its all fucked')
     print('Youre missing urllib') # i'd like to see if python can check for urllib
@@ -61,29 +62,74 @@ def requestcraft(artist_q_url):
             if i.find_all('a'): # search for an 'a' tag
                 href_orig = i.a['href']
                 i.a['href'] = musicbrainz + href_orig
+                relationships = i.a['href'] + '/relationships'
+                print(relationships)
                 with urllib.request.urlopen(i.a['href']) as wo_fat:
                     budosoup = BeautifulSoup(wo_fat.read(), 'html.parser')
                     genre = budosoup.find(id="sidebar-tags")
+                """find the wikipedia link in all these tags"""
+                with urllib.request.urlopen(relationships) as atlas:
+                    fumanchu = BeautifulSoup(atlas.read(), 'html.parser')
+                    all_links = fumanchu.select('a[href*="wikipedia"]', limit=1) #CSS select all links with wikipedia in the url
+                    if all_links:
+                        print(repr(all_links))
+                        for link in all_links:
+                            wiki = ('http:' + link['href'])
+                            print(wiki)
+                            with urllib.request.urlopen(wiki) as finale:
+                                goop = BeautifulSoup(finale.read(), 'html.parser')
+                                wikibox = goop.select('table[class*="infobox"]')
+                                for a in wikibox:
+                                    wikith = a.find('th', string="Genres")
+                                    wikigenre = wikith.parent.td
+                                    print(wikith.parent.prettify())
+                                    """wrap these details up and send off to tickles for I/O"""
+                                    ftags = genre.prettify(formatter="html")
+                                    fscore = tbl_score[0].prettify(formatter="html")
+                                    fartist = i.prettify(formatter="html")#haha, fart
+                                    ffolder = artist
+                                    fgenres = wikigenre.prettify(formatter="html")
+                                    tickles(fscore, fartist, ffolder, ftags, fgenres)
+                    else:
+                        print("No Wikipedia relationship")
+                        wikigenre = "No Wikipedia relationship"
+                        """wrap these details up and send off to tickles for I/O"""
+                        ftags = genre.prettify(formatter="html")
+                        fscore = tbl_score[0].prettify(formatter="html")
+                        fartist = i.prettify(formatter="html")#haha, fart
+                        ffolder = artist
+                        fgenres = wikigenre
+                        tickles(fscore, fartist, ffolder, ftags, fgenres)
 
-                    """wrap these details up and send off to tickles for I/O"""
-                    ftags = genre.prettify(formatter="html")#.encode('utf-8')
-                    fscore = tbl_score[0].prettify(formatter="html")#.encode('utf-8')
-                    fartist = i.prettify(formatter="html")#.encode('utf-8')
-                    ffolder = artist#.encode('utf-8')
-                    tickles(fscore, fartist, ffolder, ftags)
 
-def tickles(fscore, fartist, ffolder, ftags):
+def tickles(fscore, fartist, ffolder, ftags, fgenres):
     try:
         with open("table.html", "a") as f:
             print("Writing " + artist + " to file")
-            f.write("Score: ") #("Score: ").encode('utf-8'))
-            f.write(fscore)
-            f.write("Artist: ")#("Artist: ").encode('utf-8'))
-            f.write(fartist) #haha, fart
-            f.write("Folder Path: ")#.encode('utf-8')
-            f.write('"' + rpath + ffolder + '"')
-            #f.write(ffolder)
-            f.write(ftags)
+            message = """<html>
+            <head></head>
+                <body>
+                    <ul>
+                        <li>Artist: %s
+                            <ul>
+                                <li>Score: %s</li>
+                                <li>Folder path: %s</li>
+                                <li>MusicBrainz Tags:
+                                    <ul>
+                                        <li>%s</li>
+                                    </ul>
+                                </li>
+                                <li>Wiki tags:
+                                    <ul>
+                                        <li>%s</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+            </body>
+            """
+            f.write(message % (fartist, fscore, ('"' + rpath + ffolder + '"'), ftags, fgenres))
             f.close
     except Exception as e:
         print(e)
