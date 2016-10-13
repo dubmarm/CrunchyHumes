@@ -67,6 +67,12 @@ def requestcraft(artist_q_url):
                 with urllib.request.urlopen(i.a['href']) as wo_fat:
                     budosoup = BeautifulSoup(wo_fat.read(), 'html.parser')
                     genre = budosoup.find(id="sidebar-tags")
+                    if genre('p', string=re.compile("none")):
+                        print("No MusicBrainz tags")
+                        genre.p.decompose()
+                        genre = "No MusicBrainz tags"#genre.p
+                    else:
+                        genre = budosoup.find(id="sidebar-tags")
                 """find the wikipedia link in all these tags"""
                 with urllib.request.urlopen(relationships) as atlas:
                     fumanchu = BeautifulSoup(atlas.read(), 'html.parser')
@@ -85,24 +91,23 @@ def requestcraft(artist_q_url):
                                     print(wikith.parent.prettify())
                                     """wrap these details up and send off to tickles for I/O"""
                                     ftags = genre.prettify(formatter="html")
-                                    fscore = tbl_score[0].prettify(formatter="html")
                                     fartist = i.prettify(formatter="html")#haha, fart
                                     ffolder = artist
                                     fgenres = wikigenre.prettify(formatter="html")
-                                    tickles(fscore, fartist, ffolder, ftags, fgenres)
+                                    tickles(fartist, ffolder, ftags, fgenres)
                     else:
                         print("No Wikipedia relationship")
                         wikigenre = "No Wikipedia relationship"
                         """wrap these details up and send off to tickles for I/O"""
-                        ftags = genre.prettify(formatter="html")
-                        fscore = tbl_score[0].prettify(formatter="html")
-                        fartist = i.prettify(formatter="html")#haha, fart
+                        ftags = genre#.prettify(formatter="html")
+                        #fscore = tbl_score[0].prettify(formatter="html")
+                        fartist = i#.prettify(formatter="html")#haha, fart
                         ffolder = artist
                         fgenres = wikigenre
-                        tickles(fscore, fartist, ffolder, ftags, fgenres)
+                        tickles(fartist, ffolder, ftags, fgenres)
 
 
-def tickles(fscore, fartist, ffolder, ftags, fgenres):
+def tickles(fartist, ffolder, ftags, fgenres):
     try:
         with open("table.html", "a") as f:
             print("Writing " + artist + " to file")
@@ -112,8 +117,7 @@ def tickles(fscore, fartist, ffolder, ftags, fgenres):
                     <ul>
                         <li>Artist: %s
                             <ul>
-                                <li>Score: %s</li>
-                                <li>Folder path: %s</li>
+                                <li><a href=%s>Folder path</a></li>
                                 <li>MusicBrainz Tags:
                                     <ul>
                                         <li>%s</li>
@@ -129,7 +133,7 @@ def tickles(fscore, fartist, ffolder, ftags, fgenres):
                     </ul>
             </body>
             """
-            f.write(message % (fartist, fscore, ('"' + rpath + ffolder + '"'), ftags, fgenres))
+            f.write(message % (fartist, ('"' + rpath + ffolder + '"'), ftags, fgenres))
             f.close
     except Exception as e:
         print(e)
@@ -143,15 +147,12 @@ if __name__ == '__main__':
     else:
         rpath = (rpath + '/')
         print(rpath)
+
     musicscrape = [] #Create the ScraperList
+
     for entry in scanroot(sys.argv[1] if len(sys.argv) > 1 else '.'):
-        #print(entry)
         musicscrape.append(entry) #Create the working list of artists
     print(musicscrape)
-
-if __name__ == '__main__':
-    import sys
-    #print(musicscrape)
     #musicscrape = ['Atlas','Truckfighters']
     for artist in musicscrape:
         artist_clean = artist.replace(" ", "+")
